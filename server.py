@@ -1,11 +1,9 @@
 from socket import *
 
 # Daniels section
+# ------------------------------------
 
 # Using textbooks server application (very basic)
-
-
-
 serverPort = 12000
 serverSocket = socket(AF_INET,SOCK_STREAM) 
 serverSocket.bind(('',serverPort)) 
