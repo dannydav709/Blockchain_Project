@@ -1,1 +1,7 @@
-print("cs348")
+# Daniels section
+
+
+
+
+
+# Marwan
