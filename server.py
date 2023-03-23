@@ -24,7 +24,7 @@ serverSocket = socket(AF_INET, SOCK_STREAM)
 # Replace 'YOUR_LOCAL_IP' with your computer's local IP address
 serverSocket.bind(('172.20.10.13', serverPort))
 
-serverSocket.listen(1)
+serverSocket.listen(2)
 print('The server is ready to receive')
 
 while True:
