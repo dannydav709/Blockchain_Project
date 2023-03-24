@@ -44,17 +44,12 @@ print('The server is ready to receive')
 while True:
     # when connection request is received:
     connectionSocket, addr = serverSocket.accept()
-
     # Receive and store the message being passed by the client
     sentence = connectionSocket.recv(1024).decode()
-
     # Capitalize the sentence
     capitalizedSentence = sentence.upper()
-
     # Send the capitalized sentence back to the client
     connectionSocket.send(capitalizedSentence.encode())
-
     # Print an indication that all went well
     print("Sent uppercase version of \"" + sentence +  "\" to client")
-
     connectionSocket.close()
