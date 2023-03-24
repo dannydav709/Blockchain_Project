@@ -29,27 +29,29 @@ def get_local_ip_address():
 
 
 #  Setting the port number and IP address that the server will use for the TCP connection
-serverPort = 12000
-serverIP = "127.0.0.1"
 
-#  Creating the socket object that will maintain a TCP connection
-serverSocket = socket(AF_INET, SOCK_STREAM)
-# serverIP = get_local_ip_address()
-serverSocket.bind((serverIP, serverPort))
+if __name__ == "__main__":
+    serverPort = 12000
+    serverIP = "127.0.0.1"
 
-#  Now the socket listens for a connection request
-serverSocket.listen(2)
-print('The server is ready to receive')
+    #  Creating the socket object that will maintain a TCP connection
+    serverSocket = socket(AF_INET, SOCK_STREAM)
+    # serverIP = get_local_ip_address()
+    serverSocket.bind((serverIP, serverPort))
 
-while True:
-    # when connection request is received:
-    connectionSocket, addr = serverSocket.accept()
-    # Receive and store the message being passed by the client
-    sentence = connectionSocket.recv(1024).decode()
-    # Capitalize the sentence
-    capitalizedSentence = sentence.upper()
-    # Send the capitalized sentence back to the client
-    connectionSocket.send(capitalizedSentence.encode())
-    # Print an indication that all went well
-    print("Sent uppercase version of \"" + sentence +  "\" to client")
-    connectionSocket.close()
+    #  Now the socket listens for a connection request
+    serverSocket.listen(2)
+    print('The server is ready to receive')
+
+    while True:
+        # when connection request is received:
+        connectionSocket, addr = serverSocket.accept()
+        # Receive and store the message being passed by the client
+        sentence = connectionSocket.recv(1024).decode()
+        # Capitalize the sentence
+        capitalizedSentence = sentence.upper()
+        # Send the capitalized sentence back to the client
+        connectionSocket.send(capitalizedSentence.encode())
+        # Print an indication that all went well
+        print("Sent uppercase version of \"" + sentence +  "\" to client")
+        connectionSocket.close()
