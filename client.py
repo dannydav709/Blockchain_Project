@@ -3,11 +3,11 @@ from socket import *
 
 # TCP Client code from textbook
 
-serverName = '172.20.10.13'
+serverName = '127.0.0.1'
 
 serverPort = 12000
 clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect((serverName,serverPort))
+clientSocket.connect((serverName, serverPort))
 
 while True:
     sentence = input('Input lowercase sentence (type quit to exit):')
