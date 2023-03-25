@@ -1,5 +1,23 @@
 from socket import *
 from socket import socket, AF_INET, SOCK_STREAM
+import threading
+import queue
+
+# # Using textbooks server application (very basic)
+# serverPort = 12000
+# serverSocket = socket(AF_INET,SOCK_STREAM)
+# serverSocket.bind(('',serverPort))
+# serverSocket.listen(1)
+# print('The server is ready to receive')
+# while True:
+#     connectionSocket, addr = serverSocket.accept()
+#     sentence = connectionSocket.recv(1024).decode()
+#     capitalizedSentence = sentence.upper()
+#     connectionSocket.send(capitalizedSentence.encode())
+#     connectionSocket.close()
+
+
+#  Setting the port number and IP address that the server will use for the TCP connection
 
 
 def get_local_ip_address():
@@ -14,44 +32,44 @@ def get_local_ip_address():
     return local_ip_address
 
 
-# # Using textbooks server application (very basic)
-# serverPort = 12000
-# serverSocket = socket(AF_INET,SOCK_STREAM) 
-# serverSocket.bind(('',serverPort)) 
-# serverSocket.listen(1)
-# print('The server is ready to receive')
-# while True:
-#     connectionSocket, addr = serverSocket.accept()
-#     sentence = connectionSocket.recv(1024).decode() 
-#     capitalizedSentence = sentence.upper() 
-#     connectionSocket.send(capitalizedSentence.encode())
-#     connectionSocket.close()
+def service_a_connection(connectionSocket):
+    # Receive and store the message being passed by the client
+    sentence = connectionSocket.recv(1024).decode()
+    # Capitalize the sentence
+    capitalizedSentence = sentence.upper()
+    # Send the capitalized sentence back to the client
+    connectionSocket.send(capitalizedSentence.encode())
+    # Print an indication that all went well
+    print("Sent uppercase version of \"" + sentence + "\" to client")
+    connectionSocket.close()
 
-
-#  Setting the port number and IP address that the server will use for the TCP connection
 
 if __name__ == "__main__":
+
+    #  Configure the server PORT and IP variables
     serverPort = 12000
     serverIP = "127.0.0.1"
 
-    #  Creating the socket object that will maintain a TCP connection
+    #  Creating the server's socket object
     serverSocket = socket(AF_INET, SOCK_STREAM)
     # serverIP = get_local_ip_address()
     serverSocket.bind((serverIP, serverPort))
 
-    #  Now the socket listens for a connection request
-    serverSocket.listen(2)
+    #  Start listening for incoming connections from the clients
+    serverSocket.listen(20)
     print('The server is ready to receive')
 
+    """
+    In this while loop, we are waiting for incoming connection requests,
+    which will be serviced by another function to take care of the sending of the message
+    to the appropriate target client.   
+    """
     while True:
-        # when connection request is received:
+        """
+        After a client connects to the server socket, accept the connection.
+        This is only a handshake though, so now we create another socket for
+        the actual connection where messages are exchanged. .accept() returns a 2-tuple. 
+        addr holds a 2-tuple as well.
+        """
         connectionSocket, addr = serverSocket.accept()
-        # Receive and store the message being passed by the client
-        sentence = connectionSocket.recv(1024).decode()
-        # Capitalize the sentence
-        capitalizedSentence = sentence.upper()
-        # Send the capitalized sentence back to the client
-        connectionSocket.send(capitalizedSentence.encode())
-        # Print an indication that all went well
-        print("Sent uppercase version of \"" + sentence +  "\" to client")
-        connectionSocket.close()
+        service_a_connection(connectionSocket)
