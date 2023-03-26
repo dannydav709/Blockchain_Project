@@ -20,7 +20,7 @@ def main():
     clients_connection_Socket.connect((serverIP, serverPort))
     print("Waiting for connection to server...")
     send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
-    print("Successfully connected to server")
+    print("Successfully connected to server and credentials sent...")
     message_exchange(clients_connection_Socket)
 
     # clients_connection_Socket.shutdown(SHUT_RDWR)

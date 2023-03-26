@@ -40,7 +40,10 @@ def main():
         connectionSocket, addr = serverSocket.accept()
         check_credentials(connectionSocket, addr, clientList)
         message_exchange(connectionSocket, addr, clientList)
-        connectionSocket.shutdown(SHUT_RDWR)
+        try:
+            connectionSocket.shutdown(SHUT_RDWR)
+        except error as e:
+            # print(f"Error shutting down socket: {e}")
         connectionSocket.close()
 
 
