@@ -46,8 +46,8 @@ def main():
 
 def check_credentials(connectionSocket, addr, clientList):
     curr_clients_username = connectionSocket.recv(16384).decode()
-    curr_client = mainModule.Client(curr_clients_username, addr[0], addr[1])
-    print("Just connected: " + curr_clients_username + ", " + str(addr[0]) + ", " + str(addr[1]))
+    curr_client = mainModule.Client(curr_clients_username, addr[0])
+    # print("Just connected: " + curr_clients_username + ", " + str(addr[0]))
 
     #   Check if they are already in the client list. If not, add them to it.
     if not client_exists_in_client_list(clientList, curr_client):
@@ -75,8 +75,7 @@ def client_exists_in_client_list(clientList, client) -> bool:
     for i in clientList:
         if mainModule.clients_equal(i, client):
             return True
-        else:
-            return False
+    return False
 
 
 
