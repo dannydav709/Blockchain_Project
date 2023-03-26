@@ -1,6 +1,7 @@
 import socket
 from socket import *
 import mainModule
+import sys
 
 
 def main():
@@ -17,6 +18,7 @@ def main():
     #   For the first time that client connects after starting program:
     clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
     clients_connection_Socket.connect((serverIP, serverPort))
+    print("Waiting for connection to server...")
     send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
     print("Successfully connected to server")
     message_exchange(clients_connection_Socket)
@@ -37,6 +39,7 @@ def main():
         print("Waiting for connection to server...")
         clients_connection_Socket.connect((serverIP, serverPort))
         send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
+        print("Connected, and credentials sent...")
         message_exchange(clients_connection_Socket)
         # clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
@@ -52,6 +55,7 @@ def message_exchange(clients_connection_Socket):
     if sentence == "quit":
         clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
+        sys.exit()
     clients_connection_Socket.send(sentence.encode())
     modifiedSentence = clients_connection_Socket.recv(16384)
     print('From Server: ', modifiedSentence.decode())
