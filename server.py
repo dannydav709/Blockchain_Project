@@ -28,7 +28,6 @@ def main():
     #   Make a thread for incoming connections from the server
     #   when the server is sending a message from another client
 
-
     """
         In this while loop, we are waiting for incoming connection requests,
         which will be serviced by another function to take care of the sending of the message
@@ -57,20 +56,27 @@ def handle_client(connectionSocket, addr, clientList):
     connectionSocket.close()
 
 
-
 def check_credentials(connectionSocket, addr, clientList):
+    #   Receiving Port Number
+    curr_clients_port = connectionSocket.recv(16384).decode()
+    #   Sending confirmation that got credentials
+    connectionSocket.send("Got port".encode())
+    #   Receiving Username
     curr_clients_username = connectionSocket.recv(16384).decode()
-    curr_client = mainModule.Client(curr_clients_username, addr[0])
-    # print("Just connected: " + curr_clients_username + ", " + str(addr[0]))
 
+    # print(curr_clients_username + " " + str(addr[0]) + " " + curr_clients_port + " connected")
+    #   Sending confirmation that server got credentials
+    connectionSocket.send("Got username".encode())
+
+    #   Create client object with information give
+    curr_client = mainModule.Client(curr_clients_username, addr[0], curr_clients_port)
+
+    #   If necessary, add client to clientList
     #   Check if they are already in the client list. If not, add them to it.
-    print("Locking recource")
     with resource_lock:
         if not client_exists_in_client_list(clientList, curr_client):
             clientList.append(curr_client)
             print(curr_clients_username + " added to client list")
-    print("Unlocking recource")
-    connectionSocket.send("Got credentials".encode())
 
 
 def message_exchange(connectionSocket, addr, clientList):

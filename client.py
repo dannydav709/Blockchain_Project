@@ -19,9 +19,9 @@ def main():
 
     #   Make a thread for incoming connections from the server
     #   when the server is sending a message from another client
-    # receiver_thread = Thread(target=receive_messages, args=(clients_connection_Socket))
-    # receiver_thread.daemon = True
-    # receiver_thread.start()
+    # client_receiver_thread = Thread(target=receive_messages_from_server, args=(clientIP, clientPort))
+    # client_receiver_thread.daemon = True
+    # client_receiver_thread.start()
 
 
     #   Sending messages
@@ -32,19 +32,33 @@ def main():
         clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
         print("Waiting for connection to server...")
         clients_connection_Socket.connect((serverIP, serverPort))
-        send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
+        send_credentials(clients_connection_Socket, userName, clientPort)
         message_exchange(clients_connection_Socket)
         # clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
 
 
-def receive_messages(clients_connection_Socket):
-    pass
+# def receive_messages_from_server(clientIP, clientPort):
+#     #  Creating the server's socket object
+#     client_listener_Socket = socket(AF_INET, SOCK_STREAM)
+#     # serverIP = get_local_ip_address()
+#     client_listener_Socket.bind((clientIP, clientPort))
+#     client_listener_Socket.listen(20)
+#     print('The server is ready to receive')
 
 
-def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):
-    clients_connection_Socket.send(userName.encode())
+def send_credentials(clients_connection_Socket, userName, clientPort):
+    #   Send hardcoded Port number
+    clients_connection_Socket.send(str(clientPort).encode())
+    #   Getting confirmation that server got Port Number
     clients_connection_Socket.recv(16384).decode()
+    #   Sending Username
+    clients_connection_Socket.send(userName.encode())
+    #   Getting confirmation that server got Username
+    clients_connection_Socket.recv(16384).decode()
+
+
+
     print("Connected, and credentials sent...")
 
 

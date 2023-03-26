@@ -77,15 +77,15 @@ def compare_clients_clientPort(client1, client2) -> bool:
         return False
 
 def clients_equal(client1, client2) -> bool:
-    if client1.userName == client2.userName and client1.clientIP == client2.clientIP:
+    if client1.userName == client2.userName and client1.clientIP == client2.clientIP and client1.clientPort == client2.clientPort:
         return True
     else:
         return False
 
 class Client:
-    def __init__(self, clientUserName, clientIP):
+    def __init__(self, clientUserName, clientIP, clientPort):
         self.userName = clientUserName
         self.clientIP = clientIP
-        # self.clientPort = clientPort
+        self.clientPort = clientPort
 
 #          and client1.clientIP == client2.clientIP and client1.clientPort == client2.clientPort
