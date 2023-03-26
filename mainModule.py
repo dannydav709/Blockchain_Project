@@ -87,5 +87,3 @@ class Client:
         self.userName = clientUserName
         self.clientIP = clientIP
         self.clientPort = clientPort
-
-#          and client1.clientIP == client2.clientIP and client1.clientPort == client2.clientPort

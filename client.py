@@ -38,7 +38,8 @@ def main():
         clients_connection_Socket.close()
 
 
-# def receive_messages_from_server(clientIP, clientPort):
+def receive_messages_from_server(clientIP, clientPort):
+    pass
 #     #  Creating the server's socket object
 #     client_listener_Socket = socket(AF_INET, SOCK_STREAM)
 #     # serverIP = get_local_ip_address()
