@@ -4,47 +4,52 @@ import mainModule
 
 
 def main():
-    #  Configure the client PORT and IP variables
+    #   Configure the client PORT and IP variables
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
 
-    #  Get the username and port # for this client
+    #   Get the username and port # for this client
     userName = input('What is your userName: ')
     clientIP = serverIP
     clientPort = int(input("What is the clientPort #: "))
 
-    #  Creating the server's socket object
-    clientSocket = socket(AF_INET, SOCK_STREAM)
-    clientSocket.bind((clientIP, clientPort))
-    make_initial_connection_to_server(clientSocket, userName, serverIP, serverPort)
 
-
-    # while True:
-    #     sentence = input('Input lowercase sentence (type quit to exit):')
-    #     if sentence == "quit":
-    #         break
-    #     clientSocket.send(sentence.encode())
-    #     modifiedSentence = clientSocket.recv(16384)
-    #     print('From Server: ', modifiedSentence.decode())
-    #     clientSocket.close()
-
-def make_initial_connection_to_server(clientSocket, userName, serverIP, serverPort):
-    """
-    This function runs as soon as the client program runs, and it makes the initial connection
-    to the server, where it sends the username, and the server then registers it, and as long as
-    the server runs, it will remember the clients that have registered to it this way. But the
-    client will send this to the server each time it starts, and the server will check its list
-    to see if it already knows this client.
-    """
-    clientSocket.connect((serverIP, serverPort))
+    #   For the first time that client connects after starting program:
+    clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
+    clients_connection_Socket.connect((serverIP, serverPort))
+    send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
+    message_exchange(clients_connection_Socket)
     print("Successfully connected to server")
 
-    #   Send server the username
-    clientSocket.send(userName.encode())
+    # clients_connection_Socket.shutdown(SHUT_RDWR)
+    clients_connection_Socket.close()
 
-    #   CHECKPOINT
+
+
+    #   For all subsequent messages:
     while True:
-        pass
+        clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
+        clients_connection_Socket.connect((serverIP, serverPort))
+        send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
+        message_exchange(clients_connection_Socket)
+        # clients_connection_Socket.shutdown(SHUT_RDWR)
+        clients_connection_Socket.close()
+
+
+def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):
+    clients_connection_Socket.send(userName.encode())
+
+
+
+def message_exchange(clients_connection_Socket):
+    sentence = input('Input lowercase sentence (type quit to exit): ')
+    if sentence == "quit":
+        # clients_connection_Socket.shutdown(SHUT_RDWR)
+        clients_connection_Socket.close()
+    clients_connection_Socket.send(sentence.encode())
+    modifiedSentence = clients_connection_Socket.recv(16384)
+    print('From Server: ', modifiedSentence.decode())
+
 
 
 def callmain():
