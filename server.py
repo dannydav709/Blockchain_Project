@@ -23,8 +23,6 @@ def main():
     #  Maintain a list of users
     clientList = []  # contains list of Client objects
 
-
-
     """
         In this while loop, we are waiting for incoming connection requests,
         which will be serviced by another function to take care of the sending of the message
@@ -88,6 +86,5 @@ def client_exists_in_client_list(clientList, client) -> bool:
 
 def callmain():
     main()
-
 if __name__ == "__main__":
     callmain()

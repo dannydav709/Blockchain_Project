@@ -15,31 +15,15 @@ def main():
     clientPort = int(input("What is the clientPort #: "))
 
 
-    #   For the first time that client connects after starting program:
-    clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
-    clients_connection_Socket.connect((serverIP, serverPort))
-    print("Waiting for connection to server...")
-    send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
-    print("Successfully connected to server and credentials sent...")
-    message_exchange(clients_connection_Socket)
-
-    # clients_connection_Socket.shutdown(SHUT_RDWR)
-    clients_connection_Socket.close()
-
-
-
-    #   For all subsequent messages:
+    #   Sending messages
     while True:
-
         #   Before making new connection, ask user if they want to send money?
-
         if not input("Do you want to send crypto: ").lower() == "yes":
             return
         clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
         print("Waiting for connection to server...")
         clients_connection_Socket.connect((serverIP, serverPort))
         send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
-        print("Connected, and credentials sent...")
         message_exchange(clients_connection_Socket)
         # clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
@@ -48,6 +32,7 @@ def main():
 def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):
     clients_connection_Socket.send(userName.encode())
     clients_connection_Socket.recv(16384).decode()
+    print("Connected, and credentials sent...")
 
 
 def message_exchange(clients_connection_Socket):
