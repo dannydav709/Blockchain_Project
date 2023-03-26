@@ -2,6 +2,8 @@ import socket
 from socket import *
 import mainModule
 import sys
+from threading import Thread
+
 
 
 def main():
@@ -13,6 +15,13 @@ def main():
     userName = input('What is your userName: ')
     clientIP = serverIP
     clientPort = int(input("What is the clientPort #: "))
+
+
+    #   Make a thread for incoming connections from the server
+    #   when the server is sending a message from another client
+    # receiver_thread = Thread(target=receive_messages, args=(clients_connection_Socket))
+    # receiver_thread.daemon = True
+    # receiver_thread.start()
 
 
     #   Sending messages
@@ -27,6 +36,10 @@ def main():
         message_exchange(clients_connection_Socket)
         # clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
+
+
+def receive_messages(clients_connection_Socket):
+    pass
 
 
 def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):

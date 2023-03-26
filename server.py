@@ -1,8 +1,10 @@
 from socket import *
 from socket import socket, AF_INET, SOCK_STREAM
+from threading import Thread
 import threading
 import queue
 import mainModule
+resource_lock = threading.Lock()
 
 
 def main():
@@ -23,6 +25,10 @@ def main():
     #  Maintain a list of users
     clientList = []  # contains list of Client objects
 
+    #   Make a thread for incoming connections from the server
+    #   when the server is sending a message from another client
+
+
     """
         In this while loop, we are waiting for incoming connection requests,
         which will be serviced by another function to take care of the sending of the message
@@ -36,14 +42,20 @@ def main():
             "addr" holds a 2-tuple as well.
         """
         connectionSocket, addr = serverSocket.accept()
-        check_credentials(connectionSocket, addr, clientList)
-        message_exchange(connectionSocket, addr, clientList)
-        try:
-            connectionSocket.shutdown(SHUT_RDWR)
-        except error as e:
-            # print(f"Error shutting down socket: {e}")
-            pass
-        connectionSocket.close()
+        client_thread = Thread(target=handle_client, args=(connectionSocket, addr, clientList))
+        client_thread.start()
+
+
+def handle_client(connectionSocket, addr, clientList):
+    check_credentials(connectionSocket, addr, clientList)
+    message_exchange(connectionSocket, addr, clientList)
+    try:
+        connectionSocket.shutdown(SHUT_RDWR)
+    except error as e:
+        # print(f"Error shutting down socket: {e}")
+        pass
+    connectionSocket.close()
+
 
 
 def check_credentials(connectionSocket, addr, clientList):
@@ -52,9 +64,12 @@ def check_credentials(connectionSocket, addr, clientList):
     # print("Just connected: " + curr_clients_username + ", " + str(addr[0]))
 
     #   Check if they are already in the client list. If not, add them to it.
-    if not client_exists_in_client_list(clientList, curr_client):
-        clientList.append(curr_client)
-        print(curr_clients_username + " added to client list")
+    print("Locking recource")
+    with resource_lock:
+        if not client_exists_in_client_list(clientList, curr_client):
+            clientList.append(curr_client)
+            print(curr_clients_username + " added to client list")
+    print("Unlocking recource")
     connectionSocket.send("Got credentials".encode())
 
 
@@ -72,6 +87,7 @@ def message_exchange(connectionSocket, addr, clientList):
         print("Sent warning upon receiving empty string")
 
 
+#   Must use resource lock pre-using this function
 def client_exists_in_client_list(clientList, client) -> bool:
     #   Bug to fix: that person with same username joins, but diff port+IP
     #   In which case we need to remove the same user from the list to not have duplicates
