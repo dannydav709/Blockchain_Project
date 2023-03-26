@@ -56,9 +56,6 @@ import threading
 #         self._thread_safe_list._lock.__exit__(None, None, None)
 
 
-
-
-
 def compare_clients_userName(client1, client2) -> bool:
     if client1.userName == client2.userName:
         return True
