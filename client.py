@@ -34,6 +34,7 @@ def main():
         if not input("Do you want to send crypto: ").lower() == "yes":
             return
         clients_connection_Socket = socket(AF_INET, SOCK_STREAM)
+        print("Waiting for connection to server...")
         clients_connection_Socket.connect((serverIP, serverPort))
         send_credentials(clients_connection_Socket, userName, serverIP, serverPort)
         message_exchange(clients_connection_Socket)
@@ -43,13 +44,14 @@ def main():
 
 def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):
     clients_connection_Socket.send(userName.encode())
+    print(clients_connection_Socket.recv(16384).decode())
 
 
 
 def message_exchange(clients_connection_Socket):
     sentence = input('Input lowercase sentence (type quit to exit): ')
     if sentence == "quit":
-        # clients_connection_Socket.shutdown(SHUT_RDWR)
+        clients_connection_Socket.shutdown(SHUT_RDWR)
         clients_connection_Socket.close()
     clients_connection_Socket.send(sentence.encode())
     modifiedSentence = clients_connection_Socket.recv(16384)

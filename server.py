@@ -40,7 +40,7 @@ def main():
         connectionSocket, addr = serverSocket.accept()
         check_credentials(connectionSocket, addr, clientList)
         message_exchange(connectionSocket, addr, clientList)
-        # connectionSocket.shutdown(SHUT_RDWR)
+        connectionSocket.shutdown(SHUT_RDWR)
         connectionSocket.close()
 
 
@@ -53,6 +53,7 @@ def check_credentials(connectionSocket, addr, clientList):
     if not client_exists_in_client_list(clientList, curr_client):
         clientList.append(curr_client)
         print(curr_clients_username + " added to client list")
+    connectionSocket.send("Got credentials".encode())
 
 
 def message_exchange(connectionSocket, addr, clientList):
