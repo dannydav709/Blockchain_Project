@@ -44,8 +44,7 @@ def main():
 
 def send_credentials(clients_connection_Socket, userName, serverIP, serverPort):
     clients_connection_Socket.send(userName.encode())
-    print(clients_connection_Socket.recv(16384).decode())
-
+    clients_connection_Socket.recv(16384).decode()
 
 
 def message_exchange(clients_connection_Socket):
