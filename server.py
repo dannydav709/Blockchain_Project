@@ -44,6 +44,7 @@ def main():
             connectionSocket.shutdown(SHUT_RDWR)
         except error as e:
             # print(f"Error shutting down socket: {e}")
+            pass
         connectionSocket.close()
 
 
