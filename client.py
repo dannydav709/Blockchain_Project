@@ -14,7 +14,7 @@ def main():
 
     #   Get the username and port # for this client
     userName = input('What is your userName: ')
-    clientIP = serverIP
+    clientIP = get_local_ip_address()
     clientPort = int(input("What is the clientPort #: "))
 
 
@@ -128,6 +128,18 @@ def register_with_server(serverIP, serverPort, userName, clientPort):
     send_credentials(client_to_server_socket, userName, clientPort)
     client_to_server_socket.send("".encode())
     client_to_server_socket.close()
+
+
+def get_local_ip_address():
+    try:
+        # Create a temporary socket and connect to a dummy IP address
+        with socket(AF_INET, SOCK_DGRAM) as temp_socket:
+            temp_socket.connect(("10.255.255.255", 1))
+            local_ip_address = temp_socket.getsockname()[0]
+    except Exception:
+        # Fallback to loopback address if the method above fails
+        local_ip_address = "127.0.0.1"
+    return local_ip_address
 
 
 

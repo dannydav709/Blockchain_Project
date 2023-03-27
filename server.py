@@ -14,16 +14,18 @@ def main():
 
     #  Configure the server PORT and IP variables
     serverPort = 12000
-    serverIP = "127.0.0.1"
+    # serverIP = "127.0.0.1"
 
     #  Creating the server's socket object
     serverSocket = socket(AF_INET, SOCK_STREAM)
-    # serverIP = get_local_ip_address()
+    serverIP = get_local_ip_address()
     serverSocket.bind((serverIP, serverPort))
 
     #  Start listening for incoming connections from the clients
     serverSocket.listen(20)
+    print("Server's IP address is: " + str(serverIP))
     print('The server is ready to receive')
+
 
     #  Maintain a list of users
     clientList = []  # contains list of Client objects
