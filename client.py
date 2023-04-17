@@ -120,7 +120,6 @@ def message_exchange(socket_object, userName):
     # print('From Server: ', modifiedSentence.decode())
 
 
-
 def register_with_server(serverIP, serverPort, userName, clientPort):
     client_to_server_socket = socket(AF_INET, SOCK_STREAM)
     print("Registering with server...")

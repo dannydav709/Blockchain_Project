@@ -5,7 +5,7 @@ import threading
 import queue
 import mainModule
 
-
+#   This is used for when threads access the client list. Only one thread should be able to access the list at a time
 resource_lock = threading.Lock()
 clientList_resource_Lock = threading.Lock()
 
@@ -14,18 +14,16 @@ def main():
 
     #  Configure the server PORT and IP variables
     serverPort = 12000
-    # serverIP = "127.0.0.1"
+    serverIP = get_local_ip_address()
 
     #  Creating the server's socket object
     serverSocket = socket(AF_INET, SOCK_STREAM)
-    serverIP = get_local_ip_address()
     serverSocket.bind((serverIP, serverPort))
 
     #  Start listening for incoming connections from the clients
     serverSocket.listen(20)
     print("Server's IP address is: " + str(serverIP))
     print('The server is ready to receive')
-
 
     #  Maintain a list of users
     clientList = []  # contains list of Client objects
@@ -35,24 +33,33 @@ def main():
 
     """
         In this while loop, we are waiting for incoming connection requests,
-        which will be serviced by another function to take care of the sending of the message
+        which will be serviced by a thread to take care of the forwarding of the message
         to the appropriate target client.   
     """
     while True:
+
         """
-            After a client connects to the server socket, accept the connection.
-            This is only a handshake though, so now we create another socket for
-            the actual connection where messages are exchanged. ".accept()" returns a 2-tuple. 
-            "addr" holds a 2-tuple as well.
+            After a client connects to the server socket (the handshake), accept the connection "into" a new socket.
+            ".accept()" returns a 2-tuple. 
+            "addr" holds a 2-tuple (IP , port #) of the client.
         """
         connectionSocket, addr = serverSocket.accept()
         client_thread = Thread(target=handle_client, args=(connectionSocket, addr, clientList))
         client_thread.start()
 
 
+# Each thread that is meant to handle a client will execute this function. Will check the clients credentials,
+# then will forward message.
 def handle_client(connectionSocket, addr, clientList):
-    check_credentials(connectionSocket, addr, clientList)
+    """
+    This thread (that serves one client) checks if the client it's serving exists in the clientList,
+    and then forwards its message to the target.
+    """
+    check_if_new_or_existing_user(connectionSocket, addr, clientList)
     message_forwarding(connectionSocket, addr, clientList)
+
+    #   Shutting down the socket after message forwarding succeeded.
+    #   Try-except needed here since if the other side shut down the connection first, this would give an error.
     try:
         connectionSocket.shutdown(SHUT_RDWR)
     except error as e:
@@ -61,19 +68,19 @@ def handle_client(connectionSocket, addr, clientList):
     connectionSocket.close()
 
 
-def check_credentials(connectionSocket, addr, clientList):
-    #   Receiving Port Number
+# This function checks if the client making a new request/connection to the server already exists or
+# if it's new (and if new, will add to clientList). This method exchanges data with the client being serviced.
+def check_if_new_or_existing_user(connectionSocket, addr, clientList):
+    #   Receiving Port Number from client
     curr_clients_port = connectionSocket.recv(16384).decode()
-    #   Sending confirmation that got credentials
+    #   Sending confirmation that received port number from client
     connectionSocket.send("Got port".encode())
-    #   Receiving Username
+    #   Receiving Username from client
     curr_clients_username = connectionSocket.recv(16384).decode()
-
-    # print(curr_clients_username + " " + str(addr[0]) + " " + curr_clients_port + " connected")
-    #   Sending confirmation that server got credentials
+    #   Sending confirmation that received username from client
     connectionSocket.send("Got username".encode())
 
-    #   Create client object with information give
+    #   Create client object with info given (to later enter into list of all clients, or to check if already exists)
     curr_client = mainModule.Client(curr_clients_username, addr[0], curr_clients_port)
 
     #   If necessary, add client to clientList
@@ -81,7 +88,7 @@ def check_credentials(connectionSocket, addr, clientList):
     with resource_lock:
         if not client_exists_in_client_list(clientList, curr_client):
             clientList.append(curr_client)
-            print(curr_clients_username + " added to client list")
+            print(curr_clients_username + " registered...")
 
 
 def message_forwarding(connectionSocket, addr, clientList):
@@ -94,6 +101,7 @@ def message_forwarding(connectionSocket, addr, clientList):
             connectionSocket.send("This user doesn't exist!".encode())
         except ConnectionError:
             pass
+
         return
 
     #   Send confirmation that received the target username
@@ -168,7 +176,6 @@ def get_local_ip_address():
         # Fallback to loopback address if the method above fails
         local_ip_address = "127.0.0.1"
     return local_ip_address
-
 
 
 def callmain():
