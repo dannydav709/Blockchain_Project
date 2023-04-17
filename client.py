@@ -8,7 +8,7 @@ from threading import Thread
 previous_message = ""
 
 def main():
-    #   Configure the client PORT and IP variables
+    #   Configure the server PORT and IP variables
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
 

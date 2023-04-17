@@ -55,7 +55,7 @@ def handle_client(connectionSocket, addr, clientList):
     This thread (that serves one client) checks if the client it's serving exists in the clientList,
     and then forwards its message to the target.
     """
-    check_if_new_or_existing_user(connectionSocket, addr, clientList)
+    get_client_credentials(connectionSocket, addr, clientList)
     message_forwarding(connectionSocket, addr, clientList)
 
     #   Shutting down the socket after message forwarding succeeded.
@@ -68,9 +68,9 @@ def handle_client(connectionSocket, addr, clientList):
     connectionSocket.close()
 
 
-# This function checks if the client making a new request/connection to the server already exists or
-# if it's new (and if new, will add to clientList). This method exchanges data with the client being serviced.
-def check_if_new_or_existing_user(connectionSocket, addr, clientList):
+#   This function get the current clients port number, then username,
+#   and deals with registering the client into the clientList if needed
+def get_client_credentials(connectionSocket, addr, clientList):
     #   Receiving Port Number from client
     curr_clients_port = connectionSocket.recv(16384).decode()
     #   Sending confirmation that received port number from client
@@ -95,7 +95,7 @@ def message_forwarding(connectionSocket, addr, clientList):
     #   Get target username from the origin client
     target_username = connectionSocket.recv(16384).decode()
     #   Check that the target exists, if not, will need to send message telling the client that they don't
-    target_client = find_in_clientList(clientList, target_username)
+    target_client = get_client_object_in_clientList(clientList, target_username)
     if target_client is None:
         try:
             connectionSocket.send("This user doesn't exist!".encode())
@@ -138,26 +138,31 @@ def message_forwarding(connectionSocket, addr, clientList):
         return
 
 
-#   Must use resource lock pre-using this function
+#   Must use resource lock pre-using this function (for now)!!!!!!!!!
+#   Checks if client (object) exists in the clientList
 def client_exists_in_client_list(clientList, client) -> bool:
     #   Bug to fix: that person with same username joins, but diff port+IP
     #   In which case we need to remove the same user from the list to not have duplicates
+
+    #   Go through clientList. Return true or false.
     for i in clientList:
         if mainModule.clients_equal(i, client):
             return True
     return False
 
 
+#   Checks if client (username) exists in the clientList
 def check_username_exists_in_client_list(clientList, username) -> bool:
+    with clientList_resource_Lock:
+        for i in clientList:
+            if i.userName == username:
+                return True
+        else:
+            return False
 
-    for i in clientList:
-        if i.userName == username:
-            return True
-    else:
-        return False
 
-
-def find_in_clientList(clientList, target_username):
+#   Returns client object if client exists in the clientList
+def get_client_object_in_clientList(clientList, target_username):
     with clientList_resource_Lock:
         for i in clientList:
             if i.userName == target_username:
