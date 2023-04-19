@@ -14,7 +14,8 @@ def main():
 
     #  Configure the server PORT and IP variables
     serverPort = 12000
-    serverIP = get_local_ip_address()
+    # serverIP = get_local_ip_address()
+    serverIP = '127.0.0.1'
 
     #  Creating the server's socket object
     serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -94,7 +95,7 @@ def get_client_credentials(connectionSocket, addr, clientList):
 def message_forwarding(connectionSocket, addr, clientList):
     #   Get target username from the origin client
     target_username = connectionSocket.recv(16384).decode()
-    #   Check that the target exists, if not, will need to send message telling the client that they don't
+    #   Check that the target exists, if not, will need to send message telling the client that they don't exist
     target_client = get_client_object_in_clientList(clientList, target_username)
     if target_client is None:
         try:

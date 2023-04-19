@@ -5,22 +5,24 @@ import sys
 from threading import Thread
 
 ###### If client receives a message while it is being prompted in the console, must save the prompt, output message, and reprompt #######
-previous_message = ""
+previous_message = "default"
 
 def main():
+    global previous_message
     #   Configure the server PORT and IP variables
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
 
     #   Get the username and port # for this client
     userName = input('What is your userName: ')
-    clientIP = get_local_ip_address()
+    clientIP = '127.0.0.1'
+    # clientIP = get_local_ip_address()
     clientPort = int(input("What is the clientPort #: "))
 
 
     #   Make a thread for incoming connections from the server
     #   when the server is sending a message from another client
-    client_receiver_thread = Thread(target=thread_receives_from_server, args=(clientIP, clientPort))
+    client_receiver_thread = Thread(target=thread_receives_messages_from_server, args=(clientIP, clientPort))
     client_receiver_thread.daemon = True
     client_receiver_thread.start()
 
@@ -43,7 +45,7 @@ def main():
         client_to_server_socket.close()
 
 
-def thread_receives_from_server(clientIP, clientPort):
+def thread_receives_messages_from_server(clientIP, clientPort):
     #  Creating the client's socket object
     client_listening_Socket = socket(AF_INET, SOCK_STREAM)
     # serverIP = get_local_ip_address()
@@ -64,7 +66,7 @@ def thread_receives_from_server(clientIP, clientPort):
         server_to_client_Socket.send("Client Received message".encode())
         if not message == "":
             print("\n\nMessage received from " + origin_client_username + ": " + message)
-            print(previous_message)
+            print("\n" + previous_message)
 
         try:
             server_to_client_Socket.shutdown(SHUT_RDWR)
@@ -88,6 +90,7 @@ def send_credentials(clients_connection_Socket, userName, clientPort):
 
 def message_exchange(socket_object, userName):
     #   Send the target username
+    global previous_message
     previous_message = 'To whom do you wish to send: '
     target_userName = input('To whom do you wish to send: ')
     socket_object.send(target_userName.encode())
@@ -96,7 +99,7 @@ def message_exchange(socket_object, userName):
     target_confirmation = socket_object.recv(16384).decode()
     if target_confirmation == "This user doesn't exist!":
         previous_message = target_confirmation
-        print(target_confirmation)
+        print("\n" + target_confirmation)
         return
 
     #   Send origin username
