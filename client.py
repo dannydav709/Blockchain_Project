@@ -4,8 +4,12 @@ import mainModule
 import sys
 from threading import Thread
 
-###### If client receives a message while it is being prompted in the console, must save the prompt, output message, and reprompt #######
-previous_message = "default"
+'''
+If client receives a message while they are being prompted in the console, 
+must save the prompt, output received message, and re-prompt.
+'''
+previous_message = ""
+
 
 def main():
     global previous_message
@@ -13,45 +17,53 @@ def main():
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
 
-    #   Get the username and port # for this client
+    #   Get the username and port # for this client, from the user (for now)
     userName = input('What is your userName: ')
+    #   clientIP (and server as well) should be 127.0.0.1 when running all on one device
     clientIP = '127.0.0.1'
-    # clientIP = get_local_ip_address()
+    #   clientIP = get_local_ip_address()
     clientPort = int(input("What is the clientPort #: "))
 
-
-    #   Make a thread for incoming connections from the server
-    #   when the server is sending a message from another client
+    #   Make a thread for incoming connections from the server when the server is
+    #       forwarding a message from another client
+    #   Also kind of like staring "server" (in this case, this client) before the clients have access to it
+    #       (in this case, server is the client)
     client_receiver_thread = Thread(target=thread_receives_messages_from_server, args=(clientIP, clientPort))
     client_receiver_thread.daemon = True
     client_receiver_thread.start()
 
     register_with_server(serverIP, serverPort, userName, clientPort)
 
-    #   Sending messages for server to forward
+    #   Sending messages to server, for server to forward
     while True:
         #   Before making new connection, ask user if they want to send money?
         previous_message = "Do you want to send message: "
         if not input("Do you want to send message: ").lower() == "yes":
             return
+        #   Make a socket for the client to connect to server to send money to others
         client_to_server_socket = socket(AF_INET, SOCK_STREAM)
         previous_message = "Waiting for connection to server..."
         print("Waiting for connection to server...")
+        #   Use new socket to connect to the server
         client_to_server_socket.connect((serverIP, serverPort))
+        #   Send my (this client's) credentials
         send_credentials(client_to_server_socket, userName, clientPort)
-        # send_target_credentials(client_to_server_socket)
+        #   After sending credentials, send the message
         message_exchange(client_to_server_socket, userName)
-        # client_to_server_socket.shutdown(SHUT_RDWR)
+        #   Try to shut down the connection before closing it
+        try:
+            client_to_server_socket.shutdown(SHUT_RDWR)
+        except error as e:
+            #   print(f"Error shutting down socket: {e}")
+            pass
         client_to_server_socket.close()
 
 
 def thread_receives_messages_from_server(clientIP, clientPort):
-    #  Creating the client's socket object
+    #   Create the client's socket object, that will listen for connection requests from server (initial handshake)
     client_listening_Socket = socket(AF_INET, SOCK_STREAM)
-    # serverIP = get_local_ip_address()
     client_listening_Socket.bind((clientIP, clientPort))
     client_listening_Socket.listen(20)
-    # print("The server is ready to receive")
 
     while True:
         #   Create the socket with which we will listen for messages from server, that are being forwarded
@@ -71,7 +83,7 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         try:
             server_to_client_Socket.shutdown(SHUT_RDWR)
         except error as e:
-            # print(f"Error shutting down socket: {e}")
+            #   print(f"Error shutting down socket: {e}")
             pass
         server_to_client_Socket.close()
 
@@ -85,13 +97,16 @@ def send_credentials(clients_connection_Socket, userName, clientPort):
     clients_connection_Socket.send(userName.encode())
     #   Getting confirmation that server got Username
     clients_connection_Socket.recv(16384).decode()
-    # print("Connected, and credentials sent...")
+    #   print("Connected, and credentials sent...")
 
 
 def message_exchange(socket_object, userName):
-    #   Send the target username
     global previous_message
+
+    ###   Sending the target username:
+
     previous_message = 'To whom do you wish to send: '
+    #   Ask user who they wish to send to
     target_userName = input('To whom do you wish to send: ')
     socket_object.send(target_userName.encode())
 
@@ -119,14 +134,17 @@ def message_exchange(socket_object, userName):
     #   Get confirmation that the message was received by the server, which will attempt to forward it
     socket_object.recv(16384).decode()
 
-    # modifiedSentence = socket_object.recv(16384)
-    # print('From Server: ', modifiedSentence.decode())
+    #   modifiedSentence = socket_object.recv(16384)
+    #   print('From Server: ', modifiedSentence.decode())
 
 
+#   This function will register this client with the server, so the server becomes aware of it and can forward messages to it
 def register_with_server(serverIP, serverPort, userName, clientPort):
+    #   Make a socket that we will use to send this client's credentials to the server
     client_to_server_socket = socket(AF_INET, SOCK_STREAM)
     print("Registering with server...")
     client_to_server_socket.connect((serverIP, serverPort))
+    #   Call the send credentials function, that takes care of sending all necessary info
     send_credentials(client_to_server_socket, userName, clientPort)
     client_to_server_socket.send("".encode())
     client_to_server_socket.close()
@@ -134,19 +152,19 @@ def register_with_server(serverIP, serverPort, userName, clientPort):
 
 def get_local_ip_address():
     try:
-        # Create a temporary socket and connect to a dummy IP address
+        #   Create a temporary socket and connect to a dummy IP address
         with socket(AF_INET, SOCK_DGRAM) as temp_socket:
             temp_socket.connect(("10.255.255.255", 1))
             local_ip_address = temp_socket.getsockname()[0]
     except Exception:
-        # Fallback to loopback address if the method above fails
+        #   Fallback to loopback address if the method above fails
         local_ip_address = "127.0.0.1"
     return local_ip_address
 
 
-
-
 def callmain():
     main()
+
+
 if __name__ == "__main__":
     callmain()

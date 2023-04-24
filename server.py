@@ -12,21 +12,22 @@ clientList_resource_Lock = threading.Lock()
 
 def main():
 
-    #  Configure the server PORT and IP variables
+    #   Configure the server PORT and IP variables
     serverPort = 12000
-    # serverIP = get_local_ip_address()
+    #   serverIP (and clients' as well) should be 127.0.0.1 when running all on one device
+    #   serverIP = get_local_ip_address()
     serverIP = '127.0.0.1'
 
-    #  Creating the server's socket object
+    #   Creating the server's socket object
     serverSocket = socket(AF_INET, SOCK_STREAM)
     serverSocket.bind((serverIP, serverPort))
 
-    #  Start listening for incoming connections from the clients
+    #   Start listening for incoming connections from the clients
     serverSocket.listen(20)
     print("Server's IP address is: " + str(serverIP))
     print('The server is ready to receive')
 
-    #  Maintain a list of users
+    #   Maintain a list of users
     clientList = []  # contains list of Client objects
 
     #   Make a thread for incoming connections from the server

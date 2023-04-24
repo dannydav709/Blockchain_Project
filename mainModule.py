@@ -1,5 +1,6 @@
 import threading
-
+import random
+import string
 
 
 # class ThreadSafeList:
@@ -55,6 +56,10 @@ import threading
 #     def __del__(self):
 #         self._thread_safe_list._lock.__exit__(None, None, None)
 
+def generate_random_id():
+    letters_and_digits = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters_and_digits) for i in range(20))
+
 
 def compare_clients_userName(client1, client2) -> bool:
     if client1.userName == client2.userName:
@@ -87,3 +92,15 @@ class Client:
         self.userName = clientUserName
         self.clientIP = clientIP
         self.clientPort = clientPort
+
+class TCPcoin:
+    def __init__(self, amount):
+        self.id = generate_random_id()
+        self.symbol = "TCPC"
+        self.amount = amount
+
+class Transaction:
+    def __init__(self, sender, receiver, amount):
+        self.sender = sender
+        self.receiver = receiver
+        self.amount = amount
