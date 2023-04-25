@@ -2,6 +2,7 @@ import threading
 import random
 import string
 import hashlib
+import time
 
 
 # class ThreadSafeList:
@@ -93,48 +94,57 @@ class Client:
         self.userName = clientUserName
         self.clientIP = clientIP
         self.clientPort = clientPort
+        #   Each client starts with 0, but is gifted 200 coins when joining the TCPcoin Exchange system
+        self.coin = TCPcoin(0)
 
+#################################################################
 class TCPcoin:
     def __init__(self, amount):
-        self.id = generate_random_id()
+        # self.id = generate_random_id() # removed since won't have individual coins
         self.symbol = "TCPC"
         self.amount = amount
 
+#################################################################
+#   A transaction will be in a block
 class Transaction:
     def __init__(self, sender, receiver, amount):
         self.sender = sender
         self.receiver = receiver
         self.amount = amount
+        self.id = generate_random_id()
 
-class Blockchain_testing:
+#################################################################
+class Blockchain:
     def __init__(self):
         self.chain = []
-        self.transactions = []
-        self.create_block(proof=1, previous_hash='0')
+        #   Create the "genesis transaction"
+        self.create_block('0')
 
-    def create_block(self, proof, previous_hash):
+    #   Will create a block that will also hold a transaction object
+    def create_block(self, previous_hash, transaction=None):
         block = {'index': len(self.chain) + 1,
                  'timestamp': time.time(),
-                 'proof': proof,
+                 #  'proof': proof
                  'previous_hash': previous_hash,
-                 'transactions': self.transactions}
-        self.transactions = []
+                 'transaction': transaction
+                 }
         self.chain.append(block)
         return block
 
     def get_previous_block(self):
+        #   Will be needed to get the previous_hash
         return self.chain[-1]
 
-    def proof_of_work(self, previous_proof):
-        new_proof = 1
-        check_proof = False
-        while not check_proof:
-            hash_operation = hashlib.sha256(str(new_proof**2 - previous_proof**2).encode()).hexdigest()
-            if hash_operation[:4] == '0000':
-                check_proof = True
-            else:
-                new_proof += 1
-        return new_proof
+    # def proof_of_work(self, previous_proof):
+    #     new_proof = 1
+    #     check_proof = False
+    #     while not check_proof:
+    #         hash_operation = hashlib.sha256(str(new_proof**2 - previous_proof**2).encode()).hexdigest()
+    #         if hash_operation[:4] == '0000':
+    #             check_proof = True
+    #         else:
+    #             new_proof += 1
+    #     return new_proof
 
     def hash(self, block):
         encoded_block = str(block).encode()
