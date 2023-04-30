@@ -4,15 +4,13 @@ import mainModule
 import sys
 from threading import Thread
 
-'''
-If client receives a message while they are being prompted in the console, 
-must save the prompt, output received message, and re-prompt.
-'''
-previous_message = ""
+''' If client receives a message while they are being prompted in the console, 
+must save the prompt, output received message, and re-prompt. '''
+current_prompt_to_console = ""
 
 
 def main():
-    global previous_message
+    global current_prompt_to_console
     #   Configure the server PORT and IP variables
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
@@ -37,16 +35,16 @@ def main():
     #   Sending messages to server, for server to forward
     while True:
         #   Before making new connection, ask user if they want to send money?
-        previous_message = "Do you want to send message: "
+        current_prompt_to_console = "Do you want to send message: "
         if not input("Do you want to send message: ").lower() == "yes":
             return
         #   Make a socket for the client to connect to server to send money to others
         client_to_server_socket = socket(AF_INET, SOCK_STREAM)
-        previous_message = "Waiting for connection to server..."
+        current_prompt_to_console = "Waiting for connection to server..."
         print("Waiting for connection to server...")
         #   Use new socket to connect to the server
         client_to_server_socket.connect((serverIP, serverPort))
-        #   Send my (this client's) credentials
+        #   Send this client's credentials
         send_credentials(client_to_server_socket, userName, clientPort)
         #   After sending credentials, send the message
         message_exchange(client_to_server_socket, userName)
@@ -78,7 +76,7 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         server_to_client_Socket.send("Client Received message".encode())
         if not message == "":
             print("\n\nMessage received from " + origin_client_username + ": " + message)
-            print("\n" + previous_message)
+            print("\n" + current_prompt_to_console)
 
         try:
             server_to_client_Socket.shutdown(SHUT_RDWR)
@@ -88,7 +86,25 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         server_to_client_Socket.close()
 
 
+#   This function will register this client with the server, so the server becomes aware of it and can forward messages to it
+def register_with_server(serverIP, serverPort, userName, clientPort):
+    #   Make a socket that we will use to send this client's credentials to the server
+    client_to_server_socket = socket(AF_INET, SOCK_STREAM)
+    print("Registering with server...")
+    client_to_server_socket.connect((serverIP, serverPort))
+    #   Call the send_credentials function, that takes care of sending all necessary info to server
+    send_credentials(client_to_server_socket, userName, clientPort)
+    #   Sending an empty "target_username" to the "message_forwarding" function in the server, since only registering now.
+    client_to_server_socket.send("".encode())
+    #   Get confirmation that server received empty message meant as ending to registration process
+
+    client_to_server_socket.close()
+
+
+#   This function corresponds to the "get_client_credentials function in the server"
 def send_credentials(clients_connection_Socket, userName, clientPort):
+    #   Get message from server saying that it's ready to receive credentials
+    clients_connection_Socket.recv(16384).decode()
     #   Send real Port number (as opposed to what addr[1] holds)
     clients_connection_Socket.send(str(clientPort).encode())
     #   Getting confirmation that server got Port Number
@@ -100,54 +116,44 @@ def send_credentials(clients_connection_Socket, userName, clientPort):
     #   print("Connected, and credentials sent...")
 
 
-def message_exchange(socket_object, userName):
-    global previous_message
+def message_exchange(client_to_server_socket, userName):
+    global current_prompt_to_console
 
     ###   Sending the target username:
 
-    previous_message = 'To whom do you wish to send: '
+    current_prompt_to_console = 'To whom do you wish to send: '
     #   Ask user who they wish to send to
     target_userName = input('To whom do you wish to send: ')
-    socket_object.send(target_userName.encode())
+
+    #   Send target username
+    client_to_server_socket.send(target_userName.encode())
 
     #   Get confirmation that server received target username
-    target_confirmation = socket_object.recv(16384).decode()
+    target_confirmation = client_to_server_socket.recv(16384).decode()
     if target_confirmation == "This user doesn't exist!":
-        previous_message = target_confirmation
+        current_prompt_to_console = target_confirmation
         print("\n" + target_confirmation)
         return
 
     #   Send origin username
-    socket_object.send(userName.encode())
+    client_to_server_socket.send(userName.encode())
     #   Get confirmation that server received origin username
-    socket_object.recv(16384).decode()
+    client_to_server_socket.recv(16384).decode()
 
     #   Input message to send to target, and send to server
-    previous_message = 'Input message to send to ' + target_userName + " : "
+    current_prompt_to_console = 'Input message to send to ' + target_userName + " : "
     message = input('Input message to send to ' + target_userName + " : ")
     if message == "quit":
-        socket_object.shutdown(SHUT_RDWR)  # will send empty string to the server
-        socket_object.close()
+        client_to_server_socket.shutdown(SHUT_RDWR)  # will send empty string to the server
+        client_to_server_socket.close()
         return
-    socket_object.send(message.encode())
+    client_to_server_socket.send(message.encode())
 
     #   Get confirmation that the message was received by the server, which will attempt to forward it
-    socket_object.recv(16384).decode()
+    client_to_server_socket.recv(16384).decode()
 
-    #   modifiedSentence = socket_object.recv(16384)
+    #   modifiedSentence = client_to_server_socket.recv(16384)
     #   print('From Server: ', modifiedSentence.decode())
-
-
-#   This function will register this client with the server, so the server becomes aware of it and can forward messages to it
-def register_with_server(serverIP, serverPort, userName, clientPort):
-    #   Make a socket that we will use to send this client's credentials to the server
-    client_to_server_socket = socket(AF_INET, SOCK_STREAM)
-    print("Registering with server...")
-    client_to_server_socket.connect((serverIP, serverPort))
-    #   Call the send credentials function, that takes care of sending all necessary info
-    send_credentials(client_to_server_socket, userName, clientPort)
-    client_to_server_socket.send("".encode())
-    client_to_server_socket.close()
 
 
 def get_local_ip_address():
