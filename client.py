@@ -70,12 +70,15 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         origin_client_username = server_to_client_Socket.recv(16384).decode()
         #   Send confirmation that received the username
         server_to_client_Socket.send("Client Received username".encode())
-        #   Receive the Actual message
-        message = server_to_client_Socket.recv(16384).decode()
-        #   Send confirmation that received the message
+        #   Receive the money sent by origin client, through server
+        TCPcoin_received = server_to_client_Socket.recv(16384).decode()
+        #   Send confirmation to server that received the money
         server_to_client_Socket.send("Client Received message".encode())
-        if not message == "":
-            print("\n\nMessage received from " + origin_client_username + ": " + message)
+
+        ####### Add to client balance here - INCLUDE A LOCK
+
+        if not TCPcoin_received == "":
+            print("\n\nMessage received from " + origin_client_username + ": " + TCPcoin_received)
             print("\n" + current_prompt_to_console)
 
         try:
@@ -94,7 +97,7 @@ def register_with_server(serverIP, serverPort, userName, clientPort):
     client_to_server_socket.connect((serverIP, serverPort))
     #   Call the send_credentials function, that takes care of sending all necessary info to server
     send_credentials(client_to_server_socket, userName, clientPort)
-    #   Sending an empty "target_username" to the "message_forwarding" function in the server, since only registering now.
+    #   Sending an empty "target_username" to the "money_forwarding" function in the server, since only registering now.
     client_to_server_socket.send("".encode())
     #   Get confirmation that server received empty message meant as ending to registration process
 
@@ -137,17 +140,28 @@ def message_exchange(client_to_server_socket, userName):
 
     #   Send origin username
     client_to_server_socket.send(userName.encode())
+
     #   Get confirmation that server received origin username
     client_to_server_socket.recv(16384).decode()
 
-    #   Input message to send to target, and send to server
-    current_prompt_to_console = 'Input message to send to ' + target_userName + " : "
-    message = input('Input message to send to ' + target_userName + " : ")
-    if message == "quit":
+    #   Input amount of money to send to target, and send to server
+    current_prompt_to_console = 'Input amount of TCPcoin to send to ' + target_userName + " : "
+    TCPcoin_to_send = input(current_prompt_to_console)
+    if TCPcoin_to_send == "quit":
         client_to_server_socket.shutdown(SHUT_RDWR)  # will send empty string to the server
         client_to_server_socket.close()
         return
-    client_to_server_socket.send(message.encode())
+
+    #   Check that the value entered by the user is a float
+    while True:
+        try:
+            TCPcoin_to_send = "{:.2f}".format(float(TCPcoin_to_send))
+            break
+        except ValueError:
+            print("Invalid input. Please enter a valid integer or decimal number.")
+
+    #   Send money to server to forward to the target
+    client_to_server_socket.send(TCPcoin_to_send.encode())
 
     #   Get confirmation that the message was received by the server, which will attempt to forward it
     client_to_server_socket.recv(16384).decode()

@@ -1,5 +1,19 @@
 #   Some code that we are testing, but not going to use yet:
 
+integer = 5
+TCPcoin_to_send = "5"
+floating = float(integer)
+floating = "{:.2f}".format(floating)
+
+while True:
+    try:
+        TCPcoin_to_send = "{:.2f}".format(float(TCPcoin_to_send))
+        print(TCPcoin_to_send)
+        break
+    except ValueError:
+        print("Invalid input. Please enter a valid integer or decimal number.")
+
+
 
 ''' Testing for locking a list'''
 # class ThreadSafeList:
