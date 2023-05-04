@@ -22,9 +22,9 @@ def main():
     serverPort = 12000
 
     #   ServerIP is dynamic when not all clients are running on one device
-    # serverIP = get_local_ip_address()
+    serverIP = get_local_ip_address()
     #   serverIP (and clients' as well) should be 127.0.0.1 when running all on one device
-    serverIP = '127.0.0.1'
+    # serverIP = '127.0.0.1'
 
     #   Maintain a list of users
     clientList = []  # contains list of Client objects
