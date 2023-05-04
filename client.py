@@ -3,14 +3,17 @@ from socket import *
 import mainModule
 import sys
 from threading import Thread
+import threading
 
 ''' If client receives a message while they are being prompted in the console, 
 must save the prompt, output received message, and re-prompt. '''
 current_prompt_to_console = ""
+balance: float = 0.0
+deposite_resource_lock = threading.Lock()
 
 
 def main():
-    global current_prompt_to_console
+    global current_prompt_to_console, balance
     #   Configure the server PORT and IP variables
     serverIP = '127.0.0.1'  # since running on same computer
     serverPort = 12000
@@ -18,9 +21,10 @@ def main():
     #   Get the username and port # for this client, from the user (for now)
     userName = input('What is your userName: ')
     #   clientIP (and server as well) should be 127.0.0.1 when running all on one device
-    clientIP = '127.0.0.1'
-    #   clientIP = get_local_ip_address()
-    clientPort = int(input("What is the clientPort #: "))
+    # clientIP = '127.0.0.1'
+    clientIP = get_local_ip_address()
+    # clientPort = int(input("What is the clientPort #: "))
+    clientPort = 12005
 
     #   Make a thread for incoming connections from the server when the server is
     #       forwarding a message from another client
@@ -47,7 +51,7 @@ def main():
         #   Send this client's credentials
         send_credentials(client_to_server_socket, userName, clientPort)
         #   After sending credentials, send the message
-        message_exchange(client_to_server_socket, userName)
+        sending_money(client_to_server_socket, userName)
         #   Try to shut down the connection before closing it
         try:
             client_to_server_socket.shutdown(SHUT_RDWR)
@@ -75,10 +79,10 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         #   Send confirmation to server that received the money
         server_to_client_Socket.send("Client Received message".encode())
 
-        ####### Add to client balance here - INCLUDE A LOCK
-
         if not TCPcoin_received == "":
-            print("\n\nMessage received from " + origin_client_username + ": " + TCPcoin_received)
+            print("\n\nMoney received from " + origin_client_username + ": " + TCPcoin_received)
+            with deposite_resource_lock:
+                deposit(float(TCPcoin_received))
             print("\n" + current_prompt_to_console)
 
         try:
@@ -118,9 +122,17 @@ def send_credentials(clients_connection_Socket, userName, clientPort):
     clients_connection_Socket.recv(16384).decode()
     #   print("Connected, and credentials sent...")
 
+    #   Receive gift of 200 coins for joining TCPcoin Exchange, if this is first time registering, otherwise, receive dummy message
+    potential_gift = clients_connection_Socket.recv(16384).decode()
+    if potential_gift == "Already Registered before":
+        pass
+    else:
+        with deposite_resource_lock:
+            deposit(float(potential_gift))
 
-def message_exchange(client_to_server_socket, userName):
-    global current_prompt_to_console
+
+def sending_money(client_to_server_socket, userName):
+    global current_prompt_to_console, balance
 
     ###   Sending the target username:
 
@@ -160,6 +172,15 @@ def message_exchange(client_to_server_socket, userName):
         except ValueError:
             print("Invalid input. Please enter a valid integer or decimal number.")
 
+
+    if (check_balance() < float(TCPcoin_to_send)):
+        print("Not enough funds. You only have: " + str(check_balance()) + " TCPcoin")
+        client_to_server_socket.shutdown(SHUT_RDWR)  # will send empty string to the server
+        client_to_server_socket.close()
+        return
+
+    withdraw(float(TCPcoin_to_send))
+
     #   Send money to server to forward to the target
     client_to_server_socket.send(TCPcoin_to_send.encode())
 
@@ -168,6 +189,23 @@ def message_exchange(client_to_server_socket, userName):
 
     #   modifiedSentence = client_to_server_socket.recv(16384)
     #   print('From Server: ', modifiedSentence.decode())
+
+
+def deposit(amount: float):
+    global balance
+    balance = balance + amount
+    print("New balance: " + "{:.2f}".format(float(balance)))
+
+
+def withdraw(amount: float):
+    global balance
+    balance = balance - amount
+    print("New balance: " + "{:.2f}".format(float(balance)))
+
+
+def check_balance():
+    global balance
+    return balance
 
 
 def get_local_ip_address():

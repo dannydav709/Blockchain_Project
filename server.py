@@ -10,8 +10,9 @@ import mainModule
 #   This is used for when threads access the client list. Only one thread should be able to access the list at a time
 resource_lock = threading.Lock()
 clientList_resource_Lock = threading.Lock()
-transaction_queue: [Transaction] = []
+transaction_queue: list[Transaction] = []
 mainBlockchain: mainModule.Blockchain = mainModule.Blockchain()
+mainBlockchain.print_blockchain()
 
 
 def main():
@@ -90,6 +91,8 @@ def get_client_credentials(connectionSocket, addr, clientList):
     #   Sending confirmation that received username from client
     connectionSocket.send("Got username".encode())
 
+    ####    Now will either send money for gift (if first time registry), or empty
+
     #   Create client object with info given (to later enter into list of all clients, or to check if already exists)
     curr_client = mainModule.Client(curr_clients_username, addr[0], curr_clients_port)
 
@@ -99,6 +102,14 @@ def get_client_credentials(connectionSocket, addr, clientList):
         if not client_exists_in_client_list(clientList, curr_client):
             clientList.append(curr_client)
             print(curr_clients_username + " registered...")
+            #   Send gift for registering with TCPcoin exchange
+            TCPcoin_to_send = "{:.2f}".format(float(200))
+            connectionSocket.send(TCPcoin_to_send.encode())
+            mainBlockchain.create_block(Transaction("TCPcoin Exchange Server", curr_clients_username, TCPcoin_to_send))
+            mainBlockchain.print_last_block()
+
+        else:
+            connectionSocket.send("Already Registered before".encode())
 
 
 def money_forwarding(connectionSocket, addr, clientList):
@@ -130,12 +141,12 @@ def money_forwarding(connectionSocket, addr, clientList):
     connectionSocket.send("Received origin username...".encode())
 
     #   Get the money from the client to send to the target
-    message_to_forward = connectionSocket.recv(16384).decode()
+    money_to_forward = connectionSocket.recv(16384).decode()
 
     #   Send confirmation that received the money
     connectionSocket.send("Received money to send to target client".encode())
 
-    if not message_to_forward == "":
+    if not money_to_forward == "":
         #   Create the socket that will be used to send the message to the target
         server_to_forward_Socket = socket(AF_INET, SOCK_STREAM)
         server_to_forward_Socket.connect((target_client.clientIP, int(target_client.clientPort)))
@@ -144,13 +155,13 @@ def money_forwarding(connectionSocket, addr, clientList):
         #   Receive confirmation that the client got the username
         server_to_forward_Socket.recv(16384).decode()
         #   Send the money to the target client (from the origin client)
-        server_to_forward_Socket.send(message_to_forward.encode())
+        server_to_forward_Socket.send(money_to_forward.encode())
         #   Receive confirmation that target client received money
         server_to_forward_Socket.recv(16384).decode()
 
         #   Make the transaction and add to blockchain
-
-
+        mainBlockchain.create_block(Transaction(origin_userName, target_username, money_to_forward))
+        mainBlockchain.print_last_block()
 
         #   Print an indication that all went well
         print("Successfully forwarded message to: " + target_username)

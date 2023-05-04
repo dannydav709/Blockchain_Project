@@ -62,7 +62,7 @@ class Transaction:
     def __init__(self, sender: string, receiver: string, amount):
         self.sender_userName = sender
         self.receiver_userName = receiver
-        self.amount = amount
+        self.amount: float = amount
         self.id = generate_random_id()
 
 
@@ -148,6 +148,31 @@ class Blockchain:
             block_index += 1
         return True
 
+    def print_blockchain(self):
+        for block in self.chain:
+            print(f"Block {block['index']}:")
+            print(f"  Timestamp: {block['timestamp']}")
+            print(f"  Previous Hash: {block['hash_of_previous_block']}")
+            print(f"  Transaction:")
+            print(f"    From: {block['transaction'].sender_userName}")
+            print(f"    To: {block['transaction'].receiver_userName}")
+            print(f"    Amount: {block['transaction'].amount}")
+            print(f"    Transaction: {block['transaction'].id}")
+            print("\n")
+
+    def print_last_block(self):
+        block = self.chain[-1]  # Get the last block in the chain
+        print(f"Block {block['index']}:")
+        print(f"  Timestamp: {block['timestamp']}")
+        print(f"  Previous Hash: {block['hash_of_previous_block']}")
+        print(f"  Transaction:")
+        print(f"    From: {block['transaction'].sender_userName}")
+        print(f"    To: {block['transaction'].receiver_userName}")
+        print(f"    Amount: {block['transaction'].amount}")
+        print(f"    Transaction: {block['transaction'].id}")
+        print("\n")
+
+
     #   Not needed since we will only have 1 transaction per block
     # def add_transaction(self, transaction):
     #     self.transactions.append(transaction)
@@ -162,9 +187,10 @@ class Blockchain:
     #     return block
 
 def testing_Blockchain():
-    mainBlockchain = Blockchain()
-    mainBlockchain.create_block("fake_trans")
-    print(mainBlockchain.chain)
+    pass
+    # mainBlockchain = Blockchain()
+    # mainBlockchain.create_block("fake_trans")
+    # print(mainBlockchain.chain)
 
 if __name__=="__main__":
     testing_Blockchain()
