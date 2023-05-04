@@ -9,7 +9,7 @@ import threading
 must save the prompt, output received message, and re-prompt. '''
 current_prompt_to_console = ""
 balance: float = 0.0
-deposite_resource_lock = threading.Lock()
+deposit_resource_lock = threading.Lock()
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
         #   Use new socket to connect to the server
         client_to_server_socket.connect((serverIP, serverPort))
         #   Send this client's credentials
-        send_credentials(client_to_server_socket, userName, clientPort)
+        send_credentials(client_to_server_socket, userName, clientPort, False)
         #   After sending credentials, send the message
         sending_money(client_to_server_socket, userName)
         #   Try to shut down the connection before closing it
@@ -80,8 +80,8 @@ def thread_receives_messages_from_server(clientIP, clientPort):
         server_to_client_Socket.send("Client Received message".encode())
 
         if not TCPcoin_received == "":
-            print("\n\nMoney received from " + origin_client_username + ": " + TCPcoin_received)
-            with deposite_resource_lock:
+            print("\n\nTCPcoin received from " + origin_client_username + ": " + TCPcoin_received)
+            with deposit_resource_lock:
                 deposit(float(TCPcoin_received))
             print("\n" + current_prompt_to_console)
 
@@ -100,7 +100,7 @@ def register_with_server(serverIP, serverPort, userName, clientPort):
     print("Registering with server...")
     client_to_server_socket.connect((serverIP, serverPort))
     #   Call the send_credentials function, that takes care of sending all necessary info to server
-    send_credentials(client_to_server_socket, userName, clientPort)
+    send_credentials(client_to_server_socket, userName, clientPort, True)
     #   Sending an empty "target_username" to the "money_forwarding" function in the server, since only registering now.
     client_to_server_socket.send("".encode())
     #   Get confirmation that server received empty message meant as ending to registration process
@@ -109,7 +109,7 @@ def register_with_server(serverIP, serverPort, userName, clientPort):
 
 
 #   This function corresponds to the "get_client_credentials function in the server"
-def send_credentials(clients_connection_Socket, userName, clientPort):
+def send_credentials(clients_connection_Socket, userName, clientPort, registering: bool):
     #   Get message from server saying that it's ready to receive credentials
     clients_connection_Socket.recv(16384).decode()
     #   Send real Port number (as opposed to what addr[1] holds)
@@ -124,10 +124,8 @@ def send_credentials(clients_connection_Socket, userName, clientPort):
 
     #   Receive gift of 200 coins for joining TCPcoin Exchange, if this is first time registering, otherwise, receive dummy message
     potential_gift = clients_connection_Socket.recv(16384).decode()
-    if potential_gift == "Already Registered before":
-        pass
-    else:
-        with deposite_resource_lock:
+    if registering:
+        with deposit_resource_lock:
             deposit(float(potential_gift))
 
 
@@ -147,7 +145,7 @@ def sending_money(client_to_server_socket, userName):
     target_confirmation = client_to_server_socket.recv(16384).decode()
     if target_confirmation == "This user doesn't exist!":
         current_prompt_to_console = target_confirmation
-        print("\n" + target_confirmation)
+        print("\n" + target_confirmation + "\n")
         return
 
     #   Send origin username

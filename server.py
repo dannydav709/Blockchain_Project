@@ -12,7 +12,7 @@ resource_lock = threading.Lock()
 clientList_resource_Lock = threading.Lock()
 transaction_queue: list[Transaction] = []
 mainBlockchain: mainModule.Blockchain = mainModule.Blockchain()
-mainBlockchain.print_blockchain()
+
 
 
 def main():
@@ -38,6 +38,7 @@ def main():
     print("Server's IP address is: " + str(serverIP))
     print('The server is ready to receive')
 
+    mainBlockchain.print_blockchain()
 
     #   Make a thread for incoming connections from the server
     #   when the server is sending a message from another client
@@ -66,6 +67,7 @@ def handle_client(connectionSocket, addr, clientList):
     and then forwards its message to the target. """
     get_client_credentials(connectionSocket, addr, clientList)
     money_forwarding(connectionSocket, addr, clientList)
+
 
     #   Shutting down the socket after message forwarding succeeded.
     #   Try-except needed here since if the other side shut down the connection first, this would give an error.
@@ -106,10 +108,12 @@ def get_client_credentials(connectionSocket, addr, clientList):
             TCPcoin_to_send = "{:.2f}".format(float(200))
             connectionSocket.send(TCPcoin_to_send.encode())
             mainBlockchain.create_block(Transaction("TCPcoin Exchange Server", curr_clients_username, TCPcoin_to_send))
+            curr_client.coin = 200.0
             mainBlockchain.print_last_block()
 
         else:
-            connectionSocket.send("Already Registered before".encode())
+            connectionSocket.send((str(get_client_object_in_clientList(clientList, curr_clients_username).coin)).encode())
+            # connectionSocket.send("Already Registered before".encode())
 
 
 def money_forwarding(connectionSocket, addr, clientList):
@@ -159,12 +163,20 @@ def money_forwarding(connectionSocket, addr, clientList):
         #   Receive confirmation that target client received money
         server_to_forward_Socket.recv(16384).decode()
 
+        #   Decrement the balance within Client object of the origin client
+        origin_client = get_client_object_in_clientList(clientList, origin_userName)
+        origin_client.coin = origin_client.coin - float(money_to_forward)
+
+        #   Increment the balance within Client object of the target client
+        target_client.coin = target_client.coin + float(money_to_forward)
+
+
         #   Make the transaction and add to blockchain
         mainBlockchain.create_block(Transaction(origin_userName, target_username, money_to_forward))
         mainBlockchain.print_last_block()
 
         #   Print an indication that all went well
-        print("Successfully forwarded message to: " + target_username)
+        print("Successfully forwarded message from: " + origin_userName + " to " + target_username)
     else:
         # connectionSocket.send("Cannot forward empty message".encode())
         # print("Sent warning upon receiving empty string")

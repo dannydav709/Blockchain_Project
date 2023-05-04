@@ -45,7 +45,7 @@ class Client:
         self.clientIP = clientIP
         self.clientPort = clientPort
         #   Each client starts with 0, but is gifted 200 coins when joining the TCPcoin Exchange system
-        self.coin = TCPcoin(0)
+        self.coin: float = 0.0
 
 
 #################################################################
@@ -150,6 +150,7 @@ class Blockchain:
 
     def print_blockchain(self):
         for block in self.chain:
+            print("\n")
             print(f"Block {block['index']}:")
             print(f"  Timestamp: {block['timestamp']}")
             print(f"  Previous Hash: {block['hash_of_previous_block']}")
@@ -162,6 +163,7 @@ class Blockchain:
 
     def print_last_block(self):
         block = self.chain[-1]  # Get the last block in the chain
+        print("\n")
         print(f"Block {block['index']}:")
         print(f"  Timestamp: {block['timestamp']}")
         print(f"  Previous Hash: {block['hash_of_previous_block']}")
